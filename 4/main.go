@@ -9,8 +9,8 @@ import (
 )
 
 type Pair struct {
-	a int64
-	b int64
+	start int64
+	end   int64
 }
 
 func parseLine(pair string) [2]Pair {
@@ -18,40 +18,43 @@ func parseLine(pair string) [2]Pair {
 	var p [2]Pair
 	for i := 0; i < len(pairs); i++ {
 		var s = strings.Split(pairs[i], "-")
-		a, e := strconv.ParseInt(s[0], 10, 64)
+		start, e := strconv.ParseInt(s[0], 10, 64)
 		if e != nil {
 			fmt.Println("something went wrong ", e)
 			os.Exit(1)
 		}
-		b, e := strconv.ParseInt(s[1], 10, 64)
+		end, e := strconv.ParseInt(s[1], 10, 64)
 		if e != nil {
 			fmt.Println("something went wrong ", e)
 			os.Exit(1)
 		}
-		p[i].a = a
-		p[i].b = b
+		p[i].start = start
+		p[i].end = end
 	}
 	return p
 }
 
 //  0    1
-// a-b, a-b
+// start-end, start-end
 // 2-4, 4-6
 // 6-6, 4-6
 // 2-8, 10, 12
 
 func isFullRange(x, y Pair) bool {
-	if x.a <= y.a && x.b >= y.b {
+	if x.start <= y.start && x.end >= y.end {
 		return true
 	}
-	if x.a >= y.a && x.b <= y.b {
+	if x.start >= y.start && x.end <= y.end {
 		return true
 	}
 	return false
 }
 
 func isOverlapping(x, y Pair) bool {
-	return x.a <= y.b && x.b >= y.a
+	if x.start > y.start {
+		x.start, x.end, y.start, y.end = y.start, y.end, x.start, x.end
+	}
+	return y.start <= x.end && y.start >= x.start
 }
 
 func part2(pairs []string) int {
@@ -59,7 +62,7 @@ func part2(pairs []string) int {
 	for _, pair := range pairs {
 		var parsed [2]Pair = parseLine(pair)
 		if isOverlapping(parsed[0], parsed[1]) {
-			fmt.Println("pair", pair)
+			//fmt.Println(pair)
 			count++
 		}
 	}
@@ -84,23 +87,18 @@ func read() []string {
 		println("something went wrong at opening file")
 		os.Exit(1)
 	}
-	reader := bufio.NewReader(fx)
+	reader := bufio.NewScanner(fx)
 	var pairs []string
 
-	for {
-		line, e := reader.ReadString('\n')
-		if e != nil {
-			break
-		} else {
-			// remove the newline character
-			pairs = append(pairs, line[:len(line)-1])
-		}
+	for reader.Scan() {
+		line := reader.Text()
+		pairs = append(pairs, line)
 	}
 	return pairs
 }
 
 func main() {
 	var pairs = read()
-	fmt.Println(part1(pairs))
+	fmt.Println(len(pairs))
 	fmt.Println(part2(pairs))
 }

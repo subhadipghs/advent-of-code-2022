@@ -100,7 +100,7 @@ func partA(stack [][]string, instructions []Ins, n int) string {
 		ssize := len(stack[i])
 		// s[start:end] [start, end)
 		// elements from start index to end-1
-		popped := stack[i][ssize-ins.n : ssize] // get the last n items
+		popped := stack[i][ssize-ins.n:] // get the last n items
 		// update the source stack
 		stack[i] = stack[i][:ssize-ins.n]
 		for k := len(popped) - 1; k >= 0; k-- {
@@ -122,7 +122,7 @@ func partB(stack [][]string, instructions []Ins, n int) string {
 		ssize := len(stack[i])
 		// s[start:end] [start, end)
 		// elements from start index to end-1
-		popped := stack[i][ssize-ins.n : ssize] // get the last n items
+		popped := stack[i][ssize-ins.n:] // get the last n items
 		// update the source stack
 		stack[i] = stack[i][:ssize-ins.n]
 		for k := 0; k < len(popped); k++ {

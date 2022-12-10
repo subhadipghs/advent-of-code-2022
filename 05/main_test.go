@@ -36,7 +36,7 @@ func Test(t *testing.T) {
 		}
 	})
 
-	t.Run("should return the top crates in all stacks", func(t *testing.T) {
+	t.Run("should return the top crates in all stacks where using cratemover 9000 (part 1)", func(t *testing.T) {
 		var stacks = [][]string{
 			{"Z", "N"},
 			{"M", "C", "D"},
@@ -50,6 +50,25 @@ func Test(t *testing.T) {
 		}
 		var got = partA(stacks, ins, len(stacks))
 		var want = "CMZ"
+		if got != want {
+			t.Errorf("got - %s, want - %s", got, want)
+		}
+	})
+
+	t.Run("should return the top crates in all stacks where using cratemover 9001 (part 2)", func(t *testing.T) {
+		var stacks = [][]string{
+			{"Z", "N"},
+			{"M", "C", "D"},
+			{"P"},
+		}
+		var ins = []Ins{
+			{from: 2, to: 1, n: 1},
+			{from: 1, to: 3, n: 3},
+			{from: 2, to: 1, n: 2},
+			{from: 1, to: 2, n: 1},
+		}
+		var got = partB(stacks, ins, len(stacks))
+		var want = "MCD"
 		if got != want {
 			t.Errorf("got - %s, want - %s", got, want)
 		}

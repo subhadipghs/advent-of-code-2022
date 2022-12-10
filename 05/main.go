@@ -116,10 +116,34 @@ func partA(stack [][]string, instructions []Ins, n int) string {
 	return res
 }
 
+func partB(stack [][]string, instructions []Ins, n int) string {
+	for _, ins := range instructions {
+		i, j := ins.from-1, ins.to-1
+		ssize := len(stack[i])
+		// s[start:end] [start, end)
+		// elements from start index to end-1
+		popped := stack[i][ssize-ins.n : ssize] // get the last n items
+		// update the source stack
+		stack[i] = stack[i][:ssize-ins.n]
+		for k := 0; k < len(popped); k++ {
+			// using this cratemover 9001 as everything stays in same order
+			// just append the element in the same order they were popped
+			stack[j] = append(stack[j], popped[k])
+		}
+	}
+	var res string = ""
+	for _, s := range stack {
+		res += s[len(s)-1]
+	}
+	return res
+}
+
 func main() {
 	var stack, ins = get()
 	var n, stacks = parseStack(stack)
 	var mv = parseIns(ins)
-	var res = partA(stacks, mv, n)
-	fmt.Println(res)
+	// var res = partA(stacks, mv, n)
+	var res2 = partB(stacks, mv, n)
+	// fmt.Println(res)
+	fmt.Println(res2)
 }

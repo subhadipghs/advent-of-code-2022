@@ -11,14 +11,14 @@ import (
 type node struct {
 	label     string
 	isDir     bool
-	size      int
+	size      int64
 	parent    *node
 	childrens []*node
 }
 
 type tree struct {
 	root *node
-	size int
+	size int64
 }
 
 func bfs(key string, root *node) *node {
@@ -26,21 +26,21 @@ func bfs(key string, root *node) *node {
 		panic("empty root node")
 	}
 	var queue []*node
-	var disc map[string]bool = make(map[string]bool)
+	var disc map[*node]bool = make(map[*node]bool)
 	queue = append(queue, root)
 
 	for len(queue) > 0 {
 		front := queue[0] // get the first element
 		queue = queue[1:] // pop the first element
-		disc[front.label] = true
+		disc[front] = true
 		// for each of the childrens
 		for _, k := range front.childrens {
 			// if the label found then just do it
 			if k.label == key {
 				return k
 			}
-			if !disc[k.label] {
-				disc[k.label] = true
+			if !disc[k] {
+				disc[k] = true
 				queue = append(queue, k)
 			}
 		}
@@ -49,7 +49,7 @@ func bfs(key string, root *node) *node {
 }
 
 // something I would like to introduce is naive tree
-func makeNode(label string, size int, isDir bool, parent *node) *node {
+func makeNode(label string, size int64, isDir bool, parent *node) *node {
 	return &node{
 		label:     label,
 		childrens: make([]*node, 0),
@@ -59,49 +59,68 @@ func makeNode(label string, size int, isDir bool, parent *node) *node {
 	}
 }
 
-func (n *node) add(ch *node) int {
+func (n *node) add(ch *node) int64 {
 	if n == nil {
 		fmt.Println("oops! nil node")
 		return 0
 	}
 	if !n.isDir {
+		fmt.Println(n)
 		panic("not a directory! cannot add a child node to this")
 	}
 	if ch == nil {
 		panic("oops! invalid child node")
 	}
-	var size = n.size + ch.size
 	n.childrens = append(n.childrens, ch)
-	n.size = size
-	return size
-}
-
-func printTree(n *node) {
-	if n == nil {
-		return
-	} else {
-		var t string
-		if n.isDir {
-			t = "dir"
-		} else {
-			t = "file"
-		}
-		fmt.Printf("%s (%s) - %d\n", n.label, t, n.size)
-		if len(n.childrens) > 0 {
-			for i := 0; i < len(n.childrens); i++ {
-				printTree(n.childrens[i])
-			}
-		}
+	var q = n
+	for q != nil {
+		q.size += ch.size
+		q = q.parent
 	}
+	return n.size
 }
 
 func split(line string) []string {
 	return strings.Split(line, " ")
 }
 
-func parseCmds(lines []string) {
-	var fs *tree
+// PART 1
+func getDirsPart1(root *node) int64 {
+	var totalSize int64 = 0
+
+	if root == nil {
+		panic("empty root node")
+	}
+	var queue []*node
+	var disc map[*node]bool = make(map[*node]bool)
+	queue = append(queue, root)
+
+	for len(queue) > 0 {
+		front := queue[0] // get the first element
+		queue = queue[1:] // pop the first element
+		disc[front] = true
+		// for each of the childrens
+		for _, k := range front.childrens {
+			// if the label found then just do it
+			if !disc[k] {
+				if k.isDir && k.size <= 100000 {
+					totalSize += k.size
+				}
+				disc[k] = true
+				queue = append(queue, k)
+			}
+		}
+	}
+	return totalSize
+}
+
+func parseCmds(lines []string) *tree {
+	var fs *tree = &tree{
+		root: makeNode("/", 0, true, nil),
+		size: 0,
+	}
 	var curr *node
+
 	for _, k := range lines {
 		var s []string = split(k)
 		// check whether it's a command or not
@@ -111,35 +130,12 @@ func parseCmds(lines []string) {
 				var dir = s[2]
 				switch dir {
 				case "/":
-					fs = &tree{
-						root: makeNode("/", 0, true, nil),
-						size: 0,
-					}
 					curr = fs.root
 				case "..":
-					// go back to parent directory
-					if curr.parent != nil {
-						// fmt.Println("going to parent dir of -", curr.label)
-						curr = curr.parent
-						// fmt.Println("current directory now -", curr.label)
-					} else {
-						// why is current's parent directory nil here?
-						panic("current parent is nil here")
-					}
+					curr = curr.parent
 				default:
-					// otherwise move to the respective directory
-					// fmt.Println("finding dir -", dir)
-					curr = bfs(dir, fs.root)
-					// if curr != nil {
-					// fmt.Println("result of finding", curr.label)
-					// } else {
-					// fmt.Println("could not find the directory")
-					// }
+					curr = bfs(dir, curr)
 				}
-			} else if cmd == "ls" {
-				// list command
-			} else {
-				panic("unknown command")
 			}
 		} else {
 			// here is the result of the ls command
@@ -149,13 +145,13 @@ func parseCmds(lines []string) {
 				dir := makeNode(name, 0, true, curr)
 				curr.add(dir)
 			} else {
-				var size, _ = strconv.ParseInt(s[0], 10, 32)
-				var file = makeNode(name, int(size), false, curr)
+				var size, _ = strconv.ParseInt(s[0], 10, 64)
+				var file = makeNode(name, size, false, curr)
 				curr.add(file)
 			}
 		}
 	}
-	printTree(fs.root)
+	return fs
 }
 
 func main() {
@@ -171,5 +167,6 @@ func main() {
 	for scanner.Scan() {
 		lines = append(lines, scanner.Text())
 	}
-	parseCmds(lines)
+	fs := parseCmds(lines)
+	fmt.Println(getDirsPart1(fs.root))
 }

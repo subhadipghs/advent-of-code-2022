@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"fmt"
+	"math"
 	"os"
 	"strconv"
 	"strings"
@@ -11,14 +12,14 @@ import (
 type node struct {
 	label     string
 	isDir     bool
-	size      int64
+	size      uint64
 	parent    *node
 	childrens []*node
 }
 
 type tree struct {
 	root *node
-	size int64
+	size uint64
 }
 
 func bfs(key string, root *node) *node {
@@ -49,7 +50,7 @@ func bfs(key string, root *node) *node {
 }
 
 // something I would like to introduce is naive tree
-func makeNode(label string, size int64, isDir bool, parent *node) *node {
+func makeNode(label string, size uint64, isDir bool, parent *node) *node {
 	return &node{
 		label:     label,
 		childrens: make([]*node, 0),
@@ -59,7 +60,7 @@ func makeNode(label string, size int64, isDir bool, parent *node) *node {
 	}
 }
 
-func (n *node) add(ch *node) int64 {
+func (n *node) add(ch *node) uint64 {
 	if n == nil {
 		fmt.Println("oops! nil node")
 		return 0
@@ -85,8 +86,8 @@ func split(line string) []string {
 }
 
 // PART 1
-func getDirsPart1(root *node) int64 {
-	var totalSize int64 = 0
+func getDirsPart1(root *node) uint64 {
+	var totalSize uint64 = 0
 
 	if root == nil {
 		panic("empty root node")
@@ -112,6 +113,35 @@ func getDirsPart1(root *node) int64 {
 		}
 	}
 	return totalSize
+}
+
+// PART 2“
+func getDirsPart2(root *node) uint64 {
+	var total, need uint64 = 70000000, 30000000
+	var min uint64 = math.MaxUint64
+	unused := total - root.size // how much available space
+	// we need atleast 'need' amount of space to run the update
+	// now all we have to find directories which atleast 'available' - 'need' amount of data
+	// now we store all the dirs more than that much of space available
+	// and find the smallest of them
+	var queue []*node = []*node{root}
+	var disc map[*node]bool = make(map[*node]bool)
+	for len(queue) > 0 {
+		front := queue[0]
+		queue = queue[1:]
+		disc[front] = true
+		for _, k := range front.childrens {
+			if !disc[k] {
+				freeing := k.size + unused
+				if k.isDir && freeing >= need && k.size < min {
+					min = k.size
+				}
+				disc[k] = true
+				queue = append(queue, k)
+			}
+		}
+	}
+	return min
 }
 
 func parseCmds(lines []string) *tree {
@@ -145,7 +175,7 @@ func parseCmds(lines []string) *tree {
 				dir := makeNode(name, 0, true, curr)
 				curr.add(dir)
 			} else {
-				var size, _ = strconv.ParseInt(s[0], 10, 64)
+				var size, _ = strconv.ParseUint(s[0], 10, 64)
 				var file = makeNode(name, size, false, curr)
 				curr.add(file)
 			}
@@ -169,4 +199,5 @@ func main() {
 	}
 	fs := parseCmds(lines)
 	fmt.Println(getDirsPart1(fs.root))
+	fmt.Println(getDirsPart2(fs.root))
 }

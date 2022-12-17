@@ -19,4 +19,19 @@ func Test(t *testing.T) {
 		}
 	})
 
+	t.Run("should return the best scenic score for the tree", func(t *testing.T) {
+		want := 8
+		inp := [][]int64{
+			{3, 0, 3, 7, 3},
+			{2, 5, 5, 1, 2},
+			{6, 5, 3, 3, 2},
+			{3, 3, 5, 4, 9},
+			{3, 5, 3, 9, 0},
+		}
+		got := solve2(inp)
+		if want != got {
+			t.Errorf("got - %d, want - %d", got, want)
+		}
+	})
+
 }

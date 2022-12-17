@@ -35,9 +35,7 @@ func solve2(inp [][]int64) int {
 		for j := 0; j < len(inp[i]); j++ {
 			// if it's the first row or last row dont' count
 			// if it's the first column or last column dont count
-			if (i == 0 || i == len(inp)-1) || (j == 0 || j == len(inp)-1) {
-				// do nothing
-			} else {
+			if i != 0 && i != len(inp)-1 && j != 0 && j != len(inp)-1 {
 				// if every tree between the edge and the tree itself is smaller
 				// or conversly if any tree between the edge and tree is same or bigger height than it then it's not visible
 				// a tree can be seen from 4 sides, right, left, up, down
